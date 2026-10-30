@@ -1,0 +1,83 @@
+<?php
+declare(strict_types=1);
+
+/* Storefront */
+route('GET', '/', 'shop_home');
+route('GET', '/shop', 'shop_catalogue');
+route('GET', '/category/{slug}', 'shop_category');
+route('GET', '/product/{slug}', 'shop_product');
+route('GET', '/page/{slug}', 'shop_page');
+route('GET', '/cart', 'cart_view');
+route('POST', '/cart/add', 'cart_add_action');
+route('POST', '/cart/update', 'cart_update_action');
+route('POST', '/cart/remove', 'cart_remove_action');
+route('GET', '/checkout', 'checkout_form');
+route('POST', '/checkout', 'checkout_submit');
+route('GET', '/checkout/quote', 'checkout_quote');
+route('GET', '/order/{number}', 'order_confirmation');
+route('GET', '/track', 'order_track');
+route('POST', '/track', 'order_track');
+
+/* Customer account */
+route('GET', '/account', 'account_home');
+route('GET', '/account/login', 'account_login');
+route('POST', '/account/login', 'account_login');
+route('GET', '/account/register', 'account_register');
+route('POST', '/account/register', 'account_register');
+route('POST', '/account/logout', 'account_logout');
+route('GET', '/account/orders/{number}', 'account_order');
+route('POST', '/account/orders/{number}/return', 'account_return');
+route('GET', '/account/profile', 'account_profile');
+route('POST', '/account/profile', 'account_profile');
+route('POST', '/account/addresses/add', 'account_address_add');
+route('POST', '/account/addresses/{id}/delete', 'account_address_delete');
+
+/* Admin panel */
+route('GET', '/admin', 'admin_dashboard');
+route('GET', '/admin/login', 'admin_login');
+route('POST', '/admin/login', 'admin_login');
+route('POST', '/admin/logout', 'admin_logout');
+route('GET', '/admin/products', 'admin_products');
+route('GET', '/admin/products/new', 'admin_product_form');
+route('GET', '/admin/products/{id}/edit', 'admin_product_form');
+route('POST', '/admin/products/save', 'admin_product_save');
+route('POST', '/admin/products/{id}/delete', 'admin_product_delete');
+route('POST', '/admin/products/image/{id}/delete', 'admin_product_image_delete');
+route('GET', '/admin/categories', 'admin_categories');
+route('POST', '/admin/categories/save', 'admin_category_save');
+route('POST', '/admin/categories/{id}/delete', 'admin_category_delete');
+route('POST', '/admin/brands/save', 'admin_brand_save');
+route('POST', '/admin/brands/{id}/delete', 'admin_brand_delete');
+route('GET', '/admin/inventory', 'admin_inventory');
+route('POST', '/admin/inventory/adjust', 'admin_inventory_adjust');
+route('GET', '/admin/inventory/history', 'admin_inventory_history');
+route('GET', '/admin/orders', 'admin_orders');
+route('GET', '/admin/orders/{id}', 'admin_order_view');
+route('GET', '/admin/orders/{id}/invoice', 'admin_order_invoice');
+route('POST', '/admin/orders/{id}/status', 'admin_order_status');
+route('POST', '/admin/orders/{id}/tracking', 'admin_order_tracking');
+route('POST', '/admin/orders/{id}/payment', 'admin_order_payment');
+route('GET', '/admin/proof/{file}', 'admin_proof');
+route('GET', '/admin/customers', 'admin_customers');
+route('POST', '/admin/customers/{id}/toggle', 'admin_customer_toggle');
+route('GET', '/admin/shipping', 'admin_shipping');
+route('POST', '/admin/shipping/zone', 'admin_shipping_zone_save');
+route('POST', '/admin/shipping/zone/{id}/delete', 'admin_shipping_zone_delete');
+route('POST', '/admin/shipping/rate', 'admin_shipping_rate_save');
+route('POST', '/admin/shipping/rate/{id}/delete', 'admin_shipping_rate_delete');
+route('GET', '/admin/payments', 'admin_payments');
+route('POST', '/admin/payments/save', 'admin_payments_save');
+route('GET', '/admin/pages', 'admin_pages');
+route('GET', '/admin/pages/new', 'admin_page_form');
+route('GET', '/admin/pages/{id}/edit', 'admin_page_form');
+route('POST', '/admin/pages/save', 'admin_page_save');
+route('POST', '/admin/pages/{id}/delete', 'admin_page_delete');
+route('GET', '/admin/banners', 'admin_banners');
+route('POST', '/admin/banners/save', 'admin_banner_save');
+route('POST', '/admin/banners/{id}/delete', 'admin_banner_delete');
+route('GET', '/admin/settings', 'admin_settings');
+route('POST', '/admin/settings', 'admin_settings_save');
+route('GET', '/admin/staff', 'admin_staff');
+route('POST', '/admin/staff/save', 'admin_staff_save');
+route('GET', '/admin/activity', 'admin_activity');
+route('GET', '/admin/backup', 'admin_backup');

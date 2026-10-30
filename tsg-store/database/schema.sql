@@ -1,0 +1,291 @@
+-- Tech SG Studio Reusable E-commerce Script - Phase 1 schema (MySQL 5.7+ / MariaDB 10.3+)
+SET NAMES utf8mb4;
+
+CREATE TABLE settings (
+  `key` VARCHAR(100) NOT NULL PRIMARY KEY,
+  `value` MEDIUMTEXT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('owner','manager','order_handler','content_editor','inventory_clerk') NOT NULL DEFAULT 'manager',
+  status ENUM('active','disabled') NOT NULL DEFAULT 'active',
+  failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL,
+  last_login DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE customers (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  email VARCHAR(190) NOT NULL UNIQUE,
+  phone VARCHAR(40) NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  status ENUM('active','blocked') NOT NULL DEFAULT 'active',
+  failed_attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  locked_until DATETIME NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE addresses (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  customer_id INT UNSIGNED NOT NULL,
+  label VARCHAR(60) NULL,
+  name VARCHAR(120) NOT NULL,
+  phone VARCHAR(40) NOT NULL,
+  line1 VARCHAR(255) NOT NULL,
+  city VARCHAR(100) NOT NULL,
+  province VARCHAR(100) NOT NULL,
+  postal VARCHAR(20) NULL,
+  is_default TINYINT(1) NOT NULL DEFAULT 0,
+  FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE categories (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  parent_id INT UNSIGNED NULL,
+  name VARCHAR(120) NOT NULL,
+  slug VARCHAR(140) NOT NULL UNIQUE,
+  position INT NOT NULL DEFAULT 0,
+  status ENUM('active','hidden') NOT NULL DEFAULT 'active',
+  FOREIGN KEY (parent_id) REFERENCES categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE brands (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  slug VARCHAR(140) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE products (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(200) NOT NULL,
+  slug VARCHAR(220) NOT NULL UNIQUE,
+  short_description VARCHAR(500) NULL,
+  description MEDIUMTEXT NULL,
+  specifications TEXT NULL,
+  warranty VARCHAR(100) NULL,
+  ingredients TEXT NULL,
+  category_id INT UNSIGNED NULL,
+  brand_id INT UNSIGNED NULL,
+  type ENUM('simple','variable','digital','bundle') NOT NULL DEFAULT 'simple',
+  sku VARCHAR(80) NULL,
+  price DECIMAL(12,2) NOT NULL DEFAULT 0,
+  sale_price DECIMAL(12,2) NULL,
+  sale_starts DATE NULL,
+  sale_ends DATE NULL,
+  cost_price DECIMAL(12,2) NULL,
+  track_stock TINYINT(1) NOT NULL DEFAULT 1,
+  stock INT NOT NULL DEFAULT 0,
+  low_stock_level INT NOT NULL DEFAULT 5,
+  allow_backorder TINYINT(1) NOT NULL DEFAULT 0,
+  weight DECIMAL(10,3) NOT NULL DEFAULT 0,
+  unit VARCHAR(30) NULL,
+  tags VARCHAR(255) NULL,
+  seo_title VARCHAR(160) NULL,
+  seo_description VARCHAR(300) NULL,
+  video_url VARCHAR(255) NULL,
+  is_featured TINYINT(1) NOT NULL DEFAULT 0,
+  status ENUM('draft','published','hidden') NOT NULL DEFAULT 'published',
+  views INT UNSIGNED NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_status (status), KEY idx_cat (category_id),
+  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL,
+  FOREIGN KEY (brand_id) REFERENCES brands(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE product_variants (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  product_id INT UNSIGNED NOT NULL,
+  options VARCHAR(255) NOT NULL,
+  sku VARCHAR(80) NULL,
+  price DECIMAL(12,2) NULL,
+  stock INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE product_images (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  product_id INT UNSIGNED NOT NULL,
+  file VARCHAR(255) NOT NULL,
+  position INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE inventory_log (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  product_id INT UNSIGNED NOT NULL,
+  variant_id INT UNSIGNED NULL,
+  `change` INT NOT NULL,
+  balance INT NOT NULL,
+  reason VARCHAR(160) NOT NULL,
+  user_name VARCHAR(120) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_prod (product_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE carts (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  token CHAR(32) NULL,
+  customer_id INT UNSIGNED NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  KEY idx_token (token), KEY idx_cust (customer_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE cart_items (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  cart_id INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED NOT NULL,
+  variant_id INT UNSIGNED NULL,
+  qty INT UNSIGNED NOT NULL DEFAULT 1,
+  FOREIGN KEY (cart_id) REFERENCES carts(id) ON DELETE CASCADE,
+  FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE payment_methods (
+  code VARCHAR(30) PRIMARY KEY,
+  label VARCHAR(100) NOT NULL,
+  enabled TINYINT(1) NOT NULL DEFAULT 0,
+  instructions TEXT NULL,
+  account_details TEXT NULL,
+  extra_fee DECIMAL(10,2) NOT NULL DEFAULT 0,
+  is_manual TINYINT(1) NOT NULL DEFAULT 0,
+  position INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE shipping_zones (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  regions TEXT NOT NULL,
+  free_over DECIMAL(12,2) NULL,
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  position INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE shipping_rates (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  zone_id INT UNSIGNED NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  type ENUM('flat','weight','price') NOT NULL DEFAULT 'flat',
+  min_value DECIMAL(12,3) NOT NULL DEFAULT 0,
+  max_value DECIMAL(12,3) NULL,
+  rate DECIMAL(12,2) NOT NULL DEFAULT 0,
+  est_days VARCHAR(40) NULL,
+  is_pickup TINYINT(1) NOT NULL DEFAULT 0,
+  FOREIGN KEY (zone_id) REFERENCES shipping_zones(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE orders (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  number VARCHAR(30) NOT NULL UNIQUE,
+  access_token CHAR(32) NOT NULL,
+  customer_id INT UNSIGNED NULL,
+  cust_name VARCHAR(120) NOT NULL,
+  cust_email VARCHAR(190) NOT NULL,
+  cust_phone VARCHAR(40) NOT NULL,
+  ship_line1 VARCHAR(255) NULL,
+  ship_city VARCHAR(100) NULL,
+  ship_province VARCHAR(100) NULL,
+  ship_postal VARCHAR(20) NULL,
+  subtotal DECIMAL(12,2) NOT NULL,
+  shipping_cost DECIMAL(12,2) NOT NULL DEFAULT 0,
+  tax_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  fee_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  total DECIMAL(12,2) NOT NULL,
+  shipping_method VARCHAR(100) NULL,
+  payment_method VARCHAR(30) NOT NULL,
+  status ENUM('Pending','Confirmed','Packed','Shipped','Delivered','Completed','Cancelled','Return Requested','Returned') NOT NULL DEFAULT 'Pending',
+  payment_status ENUM('Unpaid','Paid','COD Collected','Failed','Refunded') NOT NULL DEFAULT 'Unpaid',
+  courier VARCHAR(80) NULL,
+  tracking_number VARCHAR(100) NULL,
+  note TEXT NULL,
+  admin_note TEXT NULL,
+  return_reason TEXT NULL,
+  stock_deducted TINYINT(1) NOT NULL DEFAULT 0,
+  delivered_at DATETIME NULL,
+  placed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_status (status), KEY idx_cust (customer_id), KEY idx_placed (placed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE order_items (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  product_id INT UNSIGNED NULL,
+  variant_id INT UNSIGNED NULL,
+  name VARCHAR(200) NOT NULL,
+  variant_label VARCHAR(200) NULL,
+  sku VARCHAR(80) NULL,
+  price DECIMAL(12,2) NOT NULL,
+  cost_price DECIMAL(12,2) NULL,
+  qty INT UNSIGNED NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE order_status_log (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  status VARCHAR(40) NOT NULL,
+  note VARCHAR(255) NULL,
+  changed_by VARCHAR(120) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE payments (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  order_id INT UNSIGNED NOT NULL,
+  method VARCHAR(30) NOT NULL,
+  amount DECIMAL(12,2) NOT NULL,
+  txn_id VARCHAR(120) NULL,
+  proof_file VARCHAR(255) NULL,
+  status ENUM('Pending','Verified','Rejected','Collected','Refunded') NOT NULL DEFAULT 'Pending',
+  verified_by VARCHAR(120) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE pages (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(160) NOT NULL,
+  slug VARCHAR(160) NOT NULL UNIQUE,
+  body MEDIUMTEXT NULL,
+  show_in_footer TINYINT(1) NOT NULL DEFAULT 1,
+  status ENUM('published','draft') NOT NULL DEFAULT 'published',
+  position INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE banners (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(160) NULL,
+  subtitle VARCHAR(255) NULL,
+  image VARCHAR(255) NULL,
+  link VARCHAR(255) NULL,
+  button_text VARCHAR(60) NULL,
+  position INT NOT NULL DEFAULT 0,
+  active TINYINT(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE notifications (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  audience ENUM('admin','customer') NOT NULL,
+  recipient VARCHAR(190) NULL,
+  subject VARCHAR(200) NOT NULL,
+  body TEXT NULL,
+  link VARCHAR(255) NULL,
+  is_read TINYINT(1) NOT NULL DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE activity_log (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_name VARCHAR(120) NOT NULL,
+  action VARCHAR(80) NOT NULL,
+  target VARCHAR(190) NULL,
+  detail VARCHAR(500) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

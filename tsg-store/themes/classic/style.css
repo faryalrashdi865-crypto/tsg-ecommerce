@@ -1,0 +1,6 @@
+/* Classic theme: extends the default theme and only overrides the look. */
+@import url('../default/style.css');
+body{background:#faf7f2}
+.site-header{background:var(--secondary)}.brand,.main-nav a{color:#fff}.search input{border-radius:0}.search button{border-radius:0}
+.card,.tile,fieldset,.order-box,.co-side{border-radius:0;border-color:#d9d0c1}.btn{border-radius:0;letter-spacing:.04em;text-transform:uppercase;font-size:.88rem}
+h1,h2,h3{font-style:italic}.hero{border-radius:0}

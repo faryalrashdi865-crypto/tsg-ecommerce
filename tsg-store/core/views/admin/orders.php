@@ -1,0 +1,7 @@
+<div class="toolbar"><form method="get"><input type="search" name="q" placeholder="Order no., name, email, phone" value="<?= e(get('q')) ?>">
+<select name="status" onchange="this.form.submit()"><option value="">All statuses</option><?php foreach (order_statuses() as $s): ?><option<?= get('status') === $s ? ' selected' : '' ?>><?= e($s) ?></option><?php endforeach; ?></select><button class="btn btn-outline">Search</button></form></div>
+<table class="table"><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Payment</th><th>Status</th><th>Total</th></tr></thead><tbody>
+<?php foreach ($list as $o): ?><tr><td><a href="<?= e(url('admin/orders/' . $o['id'])) ?>"><?= e($o['number']) ?></a></td><td><?= e(fmt_date($o['placed_at'])) ?></td><td><?= e($o['cust_name']) ?><br><small class="muted"><?= e($o['cust_phone']) ?></small></td>
+<td><?= e($o['payment_method']) ?> <small class="muted">(<?= e($o['payment_status']) ?>)</small></td><td><span class="pill pill-<?= e(strtolower(str_replace(' ', '-', $o['status']))) ?>"><?= e($o['status']) ?></span></td><td><?= e(money($o['total'])) ?></td></tr><?php endforeach; ?>
+<?php if (!$list): ?><tr><td colspan="6" class="muted">No orders found.</td></tr><?php endif; ?></tbody></table>
+<?php if ($pg['pages'] > 1): ?><nav class="pager"><?php for ($i = 1; $i <= $pg['pages']; $i++): ?><a<?= $i === $pg['page'] ? ' class="on"' : '' ?> href="<?= e(pager_url($i)) ?>"><?= $i ?></a><?php endfor; ?></nav><?php endif; ?>

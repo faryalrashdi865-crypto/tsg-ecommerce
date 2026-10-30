@@ -1,0 +1,5 @@
+<div class="toolbar"><form method="get"><input type="search" name="q" placeholder="Name, email or phone" value="<?= e($term) ?>"><button class="btn btn-outline">Search</button></form></div>
+<table class="table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Orders</th><th>Spent</th><th>Joined</th><th>Status</th><?php if (can('customers.manage')): ?><th></th><?php endif; ?></tr></thead><tbody>
+<?php foreach ($list as $c): ?><tr><td><?= e($c['name']) ?></td><td><?= e($c['email']) ?></td><td><?= e($c['phone']) ?></td><td><?= (int)$c['orders'] ?></td><td><?= e(money($c['spent'])) ?></td><td><?= e(fmt_date($c['created_at'], false)) ?></td><td><?= e($c['status']) ?></td>
+<?php if (can('customers.manage')): ?><td><form method="post" action="<?= e(url('admin/customers/' . $c['id'] . '/toggle')) ?>"><?= csrf_field() ?><button class="link" type="submit"><?= $c['status'] === 'active' ? 'Block' : 'Unblock' ?></button></form></td><?php endif; ?></tr><?php endforeach; ?>
+<?php if (!$list): ?><tr><td colspan="8" class="muted">No customers yet.</td></tr><?php endif; ?></tbody></table>
